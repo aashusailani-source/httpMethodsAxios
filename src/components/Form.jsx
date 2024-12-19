@@ -1,7 +1,7 @@
-import React, { useState } from 'react'
-import { postData } from '../api/postApi';
+import React, { useEffect, useState } from 'react'
+import { postData, updateData } from '../api/postApi';
 
-function Form({data,setData}) {
+function Form({data,setData,updateDataApi,setUpdatedDataApi}) {
 
     const [addData,setAddData] = useState(
         {
@@ -9,6 +9,14 @@ function Form({data,setData}) {
             body: "",
         }
     );
+
+    useEffect(() => {
+        console.log("render 2 inside form" ,updateDataApi)
+        updateDataApi && setAddData({
+            title:updateDataApi.title || "",
+            body:updateDataApi.body || "",
+        })
+    },[updateDataApi]);
 
     const handleInputChange = (e) => {
         const { name , value } = e.target;
@@ -30,9 +38,38 @@ function Form({data,setData}) {
         }
     }
 
+    const updatePostData = async () => {
+        const res = await updateData(updateDataApi.id,addData);
+        console.log(res);
+        
+        if(res.status === 200){
+            setData((prev) => {
+                console.log(prev);
+                return prev.map((currElem) => {
+                    return currElem.id === res.data.id ? res.data : currElem;
+                })
+            })
+        }
+        // setAddData({
+        //     title: "",
+        //     body: "",
+        // })
+        setUpdatedDataApi({});
+
+    }
+
     const handleFormSubmit = (e) => {
         e.preventDefault();
-        addPostData();
+
+        const action = e.nativeEvent.submitter.value;
+        // console.log("action ",e.nativeEvent.submitter.value);
+
+        if(action === "Add"){
+            addPostData();
+        }
+        else if(action === "Edit"){
+            updatePostData();
+        }
     };
 
 
@@ -71,18 +108,12 @@ function Form({data,setData}) {
     <button 
         type="submit"
         className="w-full bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transform transition duration-200 ease-in-out"
+        value={Object.keys(updateDataApi).length == 0 ? "Add" : "Edit"}
     >
-        Add Post
+        {Object.keys(updateDataApi).length == 0 ? "Add" : "Edit"}
     </button>
 </form>
-
-
-
-
-
-
-
-  )
+)
 }
 
 export default Form
